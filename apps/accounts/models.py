@@ -32,6 +32,27 @@ class User(AbstractUser):
     def post_count(self) -> int:
         return self.content.count()
     
+    @property
+    def follower_count(self) -> int:
+        return Follow.objects.filter(folllowing=self).count()
+    
+    @property
+    def following_count(self) -> int:
+        return Follow.objects.filter(follower=self).count()
+    
+    @property
+    def subscriber_count(self) -> int:
+        return User.objects.filter(subscriptions_content_plan__user=self).distinct().count()
+
+    @property
+    def age(self) -> Optional[int]:
+        if self.birth_date:
+            today = date.today()
+            age = today.year - self.birth_date.year
+            if (today.month, today.day) < (self.birth_date.month, self.birth_date.day):
+                age -= 1
+            return age
+        return None
 
     def __str__(self):
         return self.username
@@ -43,13 +64,13 @@ class User(AbstractUser):
 class Follow(models.Model):
     id = CustomAutoField(primary_key=True, editable=True)
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE, db_index=True)
-    following = models.ForeignKey(User, related_name='followers', on_delete=True, db_index=True)
+    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE, db_index=True)
 
     class Meta:
         db_table = 'user_follows'
         unique_together = ('follower', 'following')
-        verbos_name = 'follow'
-        verbos_name_plural = 'follows'
+        verbose_name = 'follow'
+        verbose_name_plural = 'follows'
     
     def __str__(self):
         return f'{self.follower} follows {self.following}'
@@ -64,7 +85,7 @@ class UserBlock(models.Model):
     class Meta:
         db_table = 'user_blocks'
         unique_together = ('blocker', 'blocked')
-        verbos_name = 'block'
+        verbose_name = 'block'
         verbose_name_plural = 'blocks'
 
 
