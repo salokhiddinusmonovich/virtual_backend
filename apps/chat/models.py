@@ -58,6 +58,9 @@ class MessageRead(models.Model):
         ordering = ('created_at',)
 
 
+def default_permissions():
+    return {'superhero': True, 'subscriber': True, 'follower': True}
+
 class ChatSetting(models.Model):
 
     class MessageFirstChoicesEnum(models.TextChoices):
@@ -68,7 +71,6 @@ class ChatSetting(models.Model):
     user = models.OneToOneField(User, related_name='chat_settings', on_delete=models.CASCADE, db_index=True)
     message_first_permission = models.CharField(max_length=10, choices=MessageFirstChoicesEnum,
                                                 default=MessageFirstChoicesEnum.SUPERHERO)
-    default_permissions = lambda : dict({'superhero': True, 'subscriber': True, 'follower': True})
     response_permissions = models.JSONField(default=default_permissions)
 
     class Meta:
