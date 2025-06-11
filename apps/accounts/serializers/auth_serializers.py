@@ -47,3 +47,66 @@ class LoginSerializer(serializers.Serializer):
     def get_token(cls, user) -> RefreshToken:
         return RefreshToken.for_user(user)
     
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        write_only=True, required=True,
+        validators=[UniqueValidator(queryset=User.objects.all(), message='This username is already taken.')]
+    )
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
+
+    first_name = serializers.CharField(write_only=True, required=True)
+    last_name = serializers.CharField(write_only=True, required=True)
+    email = serializers.CharField(write_only=True, required=False, default=None)
+    birth_date = serializers.DateField(write_only=True, required=True)
+    profile_picture = serializers.FileField(required=False)
+
+    interest_list = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+
+    refresh = serializers.CharField(read_only=True)
+    access = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'password', 'password2', 'email',  'first_name', 'last_name', 'birth_date',
+            'profile_picture', 'interest_list', 'refresh', 'access'
+        )
+
+    def create(self, validated_data):
+        interests = validated_data.pop('interest_list', [])
+        user = User(
+            username=validated_data['username'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            birth_date=validated_data.get('birth_date'),
+            profile_picture=validated_data.get('profile_picture'),
+        )
+        user.set_password(validate_password['password'])
+        user.save()
+        ChatSetting.objects.get_or_create(user=user)
+        for interest in interests:
+            tag, _ = Tag.objects.get_or_create(name=interest)
+            user.interests.add(tag)
+        
+        refresh = RefreshToken.for_user(user)
+        self._refresh = str(refresh)
+        self._access = str(refresh.access_token)
+
+
+        return user
+
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['refresh'] = instance._refresh
+        ret['access'] = instance._access
+        return ret
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError(
+                {'password': 'Password fields did not match'}
+            )
+        return attrs
+

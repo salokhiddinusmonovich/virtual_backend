@@ -6,8 +6,7 @@ from .views import (
 
 urlpatterns = [
     path('login/', auth_views.LoginAPIView.as_view(), name='login'),
-
-
+    path('register/', auth_views.RegisterAPIView.as_view(), name='register'),
 
 ]
 
