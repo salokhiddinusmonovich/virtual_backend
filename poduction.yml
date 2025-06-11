@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8080
+    expose:
+      - 8080
+    volumes:
+      - media_file:/app/media
+      - static_files:/app/staticfiles
+    depends_on:
+      - postgres
+    env_file:
+      - .env  # переменные окружения для Django
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env  # переменные окружения для БД
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 9090:80  # наружу 9090, внутри nginx слушает 80
+    volumes:
+      - media_file:/app/media
+      - static_files:/app/staticfiles
+    depends_on:
+      - web
+
+volumes:
+  media_file:
+  static_files:
+  postgres_data:
