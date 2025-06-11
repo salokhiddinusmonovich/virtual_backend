@@ -28,6 +28,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'social_django',
     'django_filters',
+    'drf_spectacular'
     
 ]
 
@@ -103,8 +104,9 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'accounts.User'
 
-
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 

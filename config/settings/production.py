@@ -1,14 +1,12 @@
-from config.settings.base import *
-
-DEBUG = True
+from decouple import config
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'virtual',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        "HOST": "db",
-        "PORT": 5432,
+        'NAME': config('POSTGRES_DB'),
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
+        'HOST': config('POSTGRES_HOST'),
+        'PORT': config('POSTGRES_PORT', cast=int),
     }
 }
